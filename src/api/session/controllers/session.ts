@@ -157,7 +157,7 @@ export default {
     ctx.cookies.set(REFRESH_COOKIE_NAME, refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 운영환경(https)에서만 none, 개발환경(http)에서는 lax
       path: "/",
       // REFRESH_TOKEN_EXPIRES와 맞춰서 대략 7일
       maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -274,7 +274,7 @@ export default {
     ctx.cookies.set(REFRESH_COOKIE_NAME, "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 운영환경(https)에서만 none, 개발환경(http)에서는 lax
       path: "/",
       maxAge: 0,
     });
