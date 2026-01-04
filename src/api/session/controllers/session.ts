@@ -94,6 +94,17 @@ export default {
    * 7) 응답은 accessToken + 안전한 user만 반환
    */
   async customLogin(ctx) {
+
+  // 🔎 HTTPS 판별 디버그 로그 (임시)
+  strapi.log.info("HTTPS CHECK (login)", {
+    secure: ctx.request.secure,
+    xfp: ctx.request.headers["x-forwarded-proto"],
+  });
+
+
+
+
+
     /**
      * ✅ 클라이언트가 보내는 로그인 바디 형태
      * - identifier: email 또는 username
@@ -172,8 +183,9 @@ export default {
 
 
     const isHttps =
-    ctx.request.secure ||
-    ctx.request.header["x-forwarded-proto"] === "https";
+    ctx.request.secure === true ||
+    ctx.request.headers["x-forwarded-proto"] === "https";
+  
   // 프록시 환경 포함, 실제 요청이 HTTPS인지 판단
 
 
@@ -304,14 +316,24 @@ export default {
    *   refreshToken을 DB에 저장하고 logout 시 서버에서도 폐기하는 방식으로 확장 가능
    */
   async logout(ctx) {
+
+  // 🔎 HTTPS 판별 디버그 로그 (임시)
+  strapi.log.info("HTTPS CHECK (logout)", {
+    secure: ctx.request.secure,
+    xfp: ctx.request.headers["x-forwarded-proto"],
+  });
+
+
+
+
     /**
      * ✅ 동일 쿠키 이름에 빈 값을 세팅 + maxAge 0
      * - 브라우저에게 "이 쿠키 삭제해" 라고 명령하는 패턴
      */
 
     const isHttps =
-    ctx.request.secure ||
-    ctx.request.header["x-forwarded-proto"] === "https";
+    ctx.request.secure === true ||
+    ctx.request.headers["x-forwarded-proto"] === "https";  
   // 프록시 환경 포함, 실제 요청이 HTTPS인지 판단
 
 
