@@ -30,6 +30,35 @@ const REFRESH_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES || "7d";
  */
 const REFRESH_COOKIE_NAME = "refreshToken";
 
+
+
+/**
+ * env의 expires 문자열(예: 15m, 7d)을 ms로 변환
+ * - JWT expiresIn 과 쿠키 maxAge를 동일 기준으로 맞추기 위함
+ */
+function parseExpiresToMs(expires: string) {
+  const match = expires.match(/^(\d+)([smhd])$/);
+  if (!match) {
+    throw new Error(`Invalid expires format: ${expires}`);
+  }
+
+  const value = Number(match[1]);
+  const unit = match[2] as "s" | "m" | "h" | "d";
+
+  const map = {
+    s: 1000,
+    m: 60_000,
+    h: 3_600_000,
+    d: 86_400_000,
+  };
+
+  return value * map[unit];
+}
+
+const refreshMaxAge = parseExpiresToMs(REFRESH_EXPIRES_IN);
+
+
+
 // 공통: 안전하게 user 객체 정리
 /**
  * ✅ sanitizeUser의 목적
@@ -141,6 +170,13 @@ export default {
       { expiresIn: REFRESH_EXPIRES_IN as string | number } as jwt.SignOptions
     );
 
+
+    const isHttps =
+    ctx.request.secure ||
+    ctx.request.header["x-forwarded-proto"] === "https";
+  // 프록시 환경 포함, 실제 요청이 HTTPS인지 판단
+
+
     // 5) HttpOnly 쿠키 저장
     /**
      * ✅ refreshToken을 HttpOnly 쿠키로 저장하는 이유
@@ -156,11 +192,12 @@ export default {
      */
     ctx.cookies.set(REFRESH_COOKIE_NAME, refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 운영환경(https)에서만 none, 개발환경(http)에서는 lax
+      secure: isHttps,
+      sameSite: isHttps ? "none" : "lax", // https 환경에서만 none, http 환경에서는 lax
       path: "/",
       // REFRESH_TOKEN_EXPIRES와 맞춰서 대략 7일
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      // maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: refreshMaxAge,
     });
 
     /**
@@ -271,10 +308,17 @@ export default {
      * ✅ 동일 쿠키 이름에 빈 값을 세팅 + maxAge 0
      * - 브라우저에게 "이 쿠키 삭제해" 라고 명령하는 패턴
      */
+
+    const isHttps =
+    ctx.request.secure ||
+    ctx.request.header["x-forwarded-proto"] === "https";
+  // 프록시 환경 포함, 실제 요청이 HTTPS인지 판단
+
+
     ctx.cookies.set(REFRESH_COOKIE_NAME, "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 운영환경(https)에서만 none, 개발환경(http)에서는 lax
+      secure: isHttps,
+      sameSite: isHttps ? "none" : "lax", // https 환경에서만 none, http 환경에서는 lax
       path: "/",
       maxAge: 0,
     });
