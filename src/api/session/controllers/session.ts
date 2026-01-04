@@ -96,10 +96,10 @@ export default {
   async customLogin(ctx) {
 
   // 🔎 HTTPS 판별 디버그 로그 (임시)
-  strapi.log.info("HTTPS CHECK (login)", {
-    secure: ctx.request.secure,
-    xfp: ctx.request.headers["x-forwarded-proto"],
-  });
+  strapi.log.info(
+    `HTTPS CHECK (login) protocol=${ctx.request.protocol} secure=${ctx.request.secure}`
+  );
+  
 
 
 
@@ -183,8 +183,9 @@ export default {
 
 
     const isHttps =
-    ctx.request.secure === true ||
-    ctx.request.headers["x-forwarded-proto"] === "https";
+    ctx.request.protocol === "https" ||
+    ctx.request.secure === true;
+  
   
   // 프록시 환경 포함, 실제 요청이 HTTPS인지 판단
 
@@ -318,11 +319,10 @@ export default {
   async logout(ctx) {
 
   // 🔎 HTTPS 판별 디버그 로그 (임시)
-  strapi.log.info("HTTPS CHECK (logout)", {
-    secure: ctx.request.secure,
-    xfp: ctx.request.headers["x-forwarded-proto"],
-  });
-
+  strapi.log.info(
+    `HTTPS CHECK (logout) protocol=${ctx.request.protocol} secure=${ctx.request.secure}`
+  );
+  
 
 
 
@@ -332,8 +332,8 @@ export default {
      */
 
     const isHttps =
-    ctx.request.secure === true ||
-    ctx.request.headers["x-forwarded-proto"] === "https";  
+    ctx.request.protocol === "https" ||
+    ctx.request.secure === true;  
   // 프록시 환경 포함, 실제 요청이 HTTPS인지 판단
 
 
